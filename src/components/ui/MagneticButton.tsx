@@ -1,0 +1,50 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { motion, HTMLMotionProps } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+interface MagneticButtonProps extends HTMLMotionProps<"button"> {
+  children: React.ReactNode;
+  className?: string;
+  magneticStrength?: number;
+}
+
+export function MagneticButton({ 
+  children, 
+  className, 
+  magneticStrength = 0.2,
+  ...props 
+}: MagneticButtonProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouse = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const { clientX, clientY } = e;
+    const { height, width, left, top } = buttonRef.current!.getBoundingClientRect();
+    const middleX = clientX - (left + width / 2);
+    const middleY = clientY - (top + height / 2);
+    setPosition({ x: middleX * magneticStrength, y: middleY * magneticStrength });
+  };
+
+  const reset = () => {
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <motion.button
+      ref={buttonRef}
+      onMouseMove={handleMouse}
+      onMouseLeave={reset}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+      className={cn(
+        "relative overflow-hidden group px-8 py-3 rounded-full font-medium transition-colors",
+        className
+      )}
+      {...props}
+    >
+      <span className="relative z-10">{children}</span>
+    </motion.button>
+  );
+}
